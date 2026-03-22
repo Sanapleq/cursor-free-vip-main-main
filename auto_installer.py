@@ -13,9 +13,11 @@ import subprocess
 import time
 from pathlib import Path
 
-# Get script directory
-SCRIPT_DIR = Path(__file__).parent if getattr(sys, 'frozen', False) else Path(__file__).parent
-os.chdir(SCRIPT_DIR)
+# Get script directory (works for both frozen and unfrozen)
+if getattr(sys, 'frozen', False):
+    SCRIPT_DIR = Path(sys.executable).parent
+else:
+    SCRIPT_DIR = Path(__file__).parent
 
 def print_header(text):
     """Print formatted header"""
@@ -37,20 +39,23 @@ def check_python():
             version = result.stdout.strip()
             print(f"✓ Python found: {version}")
             return True
-    except:
-        pass
+    except Exception as e:
+        print(f"✗ Python check failed: {e}")
     
-    print("✗ Python not found!")
     return False
 
 def create_venv():
     """Create virtual environment"""
     print("Creating virtual environment...")
     try:
-        subprocess.run([sys.executable, '-m', 'venv', 'myenv'], 
-                      check=True, timeout=120)
-        print("✓ Virtual environment created")
-        return True
+        result = subprocess.run([sys.executable, '-m', 'venv', 'myenv'], 
+                              capture_output=True, text=True, timeout=120)
+        if result.returncode == 0:
+            print("✓ Virtual environment created")
+            return True
+        else:
+            print(f"✗ Failed: {result.stderr[:200] if result.stderr else 'Unknown error'}")
+            return False
     except Exception as e:
         print(f"✗ Failed to create venv: {e}")
         return False
@@ -72,15 +77,23 @@ def install_dependencies():
                       check=True, capture_output=True, timeout=300)
         
         # Install requirements
-        if (SCRIPT_DIR / 'requirements.txt').exists():
+        req_file = SCRIPT_DIR / 'requirements.txt'
+        if req_file.exists():
             print("Installing packages from requirements.txt...")
-            subprocess.run([str(venv_python), '-m', 'pip', 'install', '-r', 'requirements.txt'], 
-                          check=True, timeout=600)
-            print("✓ All dependencies installed")
-            return True
+            result = subprocess.run([str(venv_python), '-m', 'pip', 'install', '-r', str(req_file)], 
+                                  capture_output=True, text=True, timeout=600)
+            if result.returncode == 0:
+                print("✓ All dependencies installed")
+                return True
+            else:
+                print(f"✗ Installation failed: {result.stderr[:200] if result.stderr else 'Unknown error'}")
+                return False
         else:
             print("✗ requirements.txt not found!")
             return False
+    except subprocess.TimeoutExpired:
+        print("✗ Installation timed out!")
+        return False
     except Exception as e:
         print(f"✗ Installation failed: {e}")
         return False
@@ -93,7 +106,7 @@ def check_dependencies():
         return False
     
     try:
-        result = subprocess.run([str(venv_python), '-c', 'import requests, colorama'], 
+        result = subprocess.run([str(venv_python), '-c', 'import requests, colorama, psutil'], 
                               capture_output=True, timeout=10)
         return result.returncode == 0
     except:
@@ -102,7 +115,7 @@ def check_dependencies():
 def launch_application():
     """Launch the main application"""
     print("\nLaunching Cursor Free VIP...")
-    time.sleep(2)
+    time.sleep(1)
     
     venv_python = SCRIPT_DIR / 'myenv' / 'Scripts' / 'python.exe'
     main_py = SCRIPT_DIR / 'main.py'
@@ -112,7 +125,9 @@ def launch_application():
         return False
     
     try:
-        subprocess.run([str(venv_python), str(main_py)], check=True)
+        # Don't wait for completion, just launch
+        subprocess.Popen([str(venv_python), str(main_py)])
+        print("✓ Application launched")
         return True
     except Exception as e:
         print(f"✗ Failed to launch: {e}")
@@ -145,12 +160,15 @@ def main():
     current_step += 1
     print_step(current_step, total_steps, "Setting up virtual environment")
     
-    venv_exists = (SCRIPT_DIR / 'myenv' / 'Scripts' / 'python.exe').exists()
+    venv_path = SCRIPT_DIR / 'myenv' / 'Scripts' / 'python.exe'
+    venv_exists = venv_path.exists()
     
     if venv_exists:
         print("✓ Virtual environment already exists")
     else:
+        print("Creating new virtual environment...")
         if not create_venv():
+            print("\nFailed to create virtual environment.")
             input("\nPress Enter to exit...")
             return False
     
@@ -158,9 +176,11 @@ def main():
     current_step += 1
     print_step(current_step, total_steps, "Installing dependencies")
     
-    if check_dependencies():
+    deps_ok = check_dependencies()
+    if deps_ok:
         print("✓ Dependencies already installed")
     else:
+        print("Installing missing dependencies...")
         if not install_dependencies():
             print("\nInstallation failed. Try running SETUP.bat manually.")
             input("\nPress Enter to exit...")
@@ -170,29 +190,28 @@ def main():
     current_step += 1
     print_step(current_step, total_steps, "Launching application")
     
-    if not launch_application():
-        input("\nPress Enter to exit...")
-        return False
+    launch_application()
     
     print_header("Installation Complete!")
     print("✓ All components installed successfully")
-    print("✓ Application launched")
+    print("✓ Application launched in separate window")
     print("\nNext time, you can run START.bat for faster launch")
     print("\n" + "=" * 70)
+    print("\nThis window will close in 5 seconds...")
+    time.sleep(5)
     
     return True
 
 if __name__ == '__main__':
     try:
         success = main()
-        if success:
-            sys.exit(0)
-        else:
-            sys.exit(1)
+        sys.exit(0 if success else 1)
     except KeyboardInterrupt:
         print("\n\nInstallation cancelled by user")
         sys.exit(1)
     except Exception as e:
         print(f"\n\nUnexpected error: {e}")
+        import traceback
+        traceback.print_exc()
         input("Press Enter to exit...")
         sys.exit(1)
