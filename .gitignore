@@ -1,74 +1,27 @@
 # Python
 __pycache__/
 *.py[cod]
-*$py.class
-*.so
-.Python
-*.egg-info/
-.eggs/
+*.pyc
 
-# Virtual environments
+# Virtual environment
 myenv/
-ENV/
-venv/
-.venv/
 
-# pip cache
-.pip_cache/
-
-# Build artifacts
-build/
+# Build
 dist/
+build/
 *.spec
-*.spec2
 
 # IDE
 .idea/
 .vscode/
 *.swp
-*.swo
-*~
 
 # OS
 .DS_Store
 Thumbs.db
-desktop.ini
 
 # Logs
 *.log
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-
-# Temp files
-*.tmp
-*.bak
-*.temp
-
-# Project specific - DO NOT commit
+# Env
 .env
-.env copy
-credentials.txt
-cursor_accounts.txt
-temp_account_info.txt
-setup_log.txt
-start_log.txt
-
-# Drivers (downloaded separately)
-drivers/*.exe
-drivers/*.dll
-drivers/*.sys
-
-# Test files
-test_*.py
-*_test.py
-
-# Local scripts
-check_license.py
-cursor_modifier.py
-reset_machine.py
-token_monitor.py
-get_mac.py
-recaptcha.py
