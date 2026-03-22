@@ -42,14 +42,14 @@ SIMPLIFIED_LOGO = f"""
 {Fore.GREEN}FREE VIP {version}{Style.RESET_ALL}
 {Style.RESET_ALL}"""
 
-# Contributors info
+# Project info
 CURSOR_CONTRIBUTORS = f"""
 {Fore.CYAN}╔══════════════════════════════════════════════════════════════════╗
 ║                        {Fore.YELLOW}CURSOR FREE VIP{Fore.CYAN}                          ║
 ╠══════════════════════════════════════════════════════════════════╣
-║ {Fore.GREEN}Author:{Fore.WHITE}  yeongpin                                            {Fore.CYAN}║
-║ {Fore.GREEN}GitHub:{Fore.WHITE}  https://github.com/psipher/cursor-free-vip-main       {Fore.CYAN}║
-║ {Fore.GREEN}Version:{Fore.WHITE} {version}                                            {Fore.CYAN}║
+║ {Fore.GREEN}Platform:{Fore.WHITE}  Windows Only                                      {Fore.CYAN}║
+║ {Fore.GREEN}Version:{Fore.WHITE}  {version}                                           {Fore.CYAN}║
+║ {Fore.GREEN}Python:{Fore.WHITE}    3.11-3.14                                          {Fore.CYAN}║
 ╚══════════════════════════════════════════════════════════════════╝{Style.RESET_ALL}
 """
 

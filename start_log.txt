@@ -1,4 +1,0 @@
-START.bat Log - 22.03.2026  9:38:53,83 
-Script: H:\cursor-free-vip-main-main\START.bat 
-Directory: H:\cursor-free-vip-main-main 
- 
