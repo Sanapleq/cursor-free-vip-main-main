@@ -88,6 +88,21 @@ if %ERRORLEVEL% NEQ 0 (
 echo    OK: Administrator rights obtained
 echo.
 
+REM Close Cursor if running
+echo    Checking Cursor processes...
+tasklist /FI "IMAGENAME eq cursor.exe" 2>nul | find "cursor.exe" >nul
+if %ERRORLEVEL% EQU 0 (
+    echo    WARNING: Cursor is running!
+    echo    Closing Cursor...
+    taskkill /F /IM cursor.exe >nul 2>&1
+    taskkill /F /IM "cursor helper.exe" >nul 2>&1
+    timeout /t 2 >nul
+    echo    OK: Cursor closed
+) else (
+    echo    OK: Cursor is not running
+)
+echo.
+
 REM Activate and run
 echo [4/4] Starting program...
 echo.

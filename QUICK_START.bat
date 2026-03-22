@@ -101,7 +101,36 @@ if %ERRORLEVEL% EQU 0 (
 echo.
 
 REM Step 4: Launch
-echo [4/4] Launching program...
+echo [4/4] Preparing to launch...
+echo.
+
+REM Check if Cursor is running and close it
+echo    Checking for Cursor processes...
+tasklist /FI "IMAGENAME eq cursor.exe" 2>nul | find "cursor.exe" >nul
+if %ERRORLEVEL% EQU 0 (
+    echo    WARNING: Cursor is running!
+    echo    Closing Cursor processes...
+    
+    REM Try graceful close first
+    taskkill /IM cursor.exe /FI "WINDOWTITLE eq Cursor*" 2>nul
+    
+    REM Then force kill if still running
+    timeout /t 2 >nul
+    tasklist /FI "IMAGENAME eq cursor.exe" 2>nul | find "cursor.exe" >nul
+    if %ERRORLEVEL% EQU 0 (
+        echo    Force closing Cursor...
+        taskkill /F /IM cursor.exe 2>nul
+        taskkill /F /IM "cursor helper.exe" 2>nul
+        timeout /t 2 >nul
+    )
+    
+    echo    OK: Cursor closed
+) else (
+    echo    OK: Cursor is not running
+)
+echo.
+
+echo    Starting program...
 echo.
 echo ================================================================
 echo.
