@@ -15,8 +15,12 @@ from pathlib import Path
 
 # Get script directory (works for both frozen and unfrozen)
 if getattr(sys, 'frozen', False):
+    # For frozen app, use the directory where the .exe is located
     SCRIPT_DIR = Path(sys.executable).parent
+    # Also change to that directory
+    os.chdir(SCRIPT_DIR)
 else:
+    # For unfrozen app, use the script's directory
     SCRIPT_DIR = Path(__file__).parent
 
 def print_header(text):
@@ -46,39 +50,53 @@ def check_python():
 
 def create_venv():
     """Create virtual environment"""
-    print("Creating virtual environment (this may take 30-60 seconds)...")
-    print("Please wait...", end="", flush=True)
+    print("Creating virtual environment (this may take 1-2 minutes)...")
     
+    venv_path = SCRIPT_DIR / 'myenv'
+    
+    # Try direct venv creation first
     try:
-        # Use subprocess.Popen for live output
-        proc = subprocess.Popen(
+        import venv
+        print("Using Python venv module...")
+        
+        # Create with pip
+        builder = venv.EnvBuilder(with_pip=True, clear=False)
+        builder.create(str(venv_path))
+        
+        # Verify
+        if (venv_path / 'Scripts' / 'python.exe').exists():
+            print("[OK] Virtual environment created")
+            return True
+        else:
+            print("[WARNING] venv module succeeded but python.exe not found")
+            # Fall through to subprocess method
+    except Exception as e:
+        print(f"[INFO] venv module failed: {e}")
+        print("Trying subprocess method...")
+    
+    # Fallback: Use subprocess
+    try:
+        result = subprocess.run(
             [sys.executable, '-m', 'venv', 'myenv'],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
+            capture_output=True,
             text=True,
-            bufsize=1
+            timeout=300,  # 5 minutes
+            encoding='utf-8',
+            errors='replace'
         )
         
-        # Wait with timeout
-        try:
-            outs, errs = proc.communicate(timeout=180)
-            if proc.returncode == 0:
-                print(" DONE")
-                print("[OK] Virtual environment created")
-                return True
-            else:
-                print(" FAILED")
-                err_msg = errs[:200] if errs else 'Unknown error'
-                print(f"[ERROR] Failed: {err_msg}")
-                return False
-        except subprocess.TimeoutExpired:
-            proc.kill()
-            print(" TIMEOUT")
-            print("[ERROR] Venv creation timed out (took more than 3 minutes)")
+        if result.returncode == 0:
+            print("[OK] Virtual environment created (subprocess)")
+            return True
+        else:
+            err_msg = result.stderr[:300] if result.stderr else 'Unknown error'
+            print(f"[ERROR] Failed: {err_msg}")
             return False
+    except subprocess.TimeoutExpired:
+        print("[ERROR] Timeout - took more than 5 minutes")
+        return False
     except Exception as e:
-        print(f" EXCEPTION")
-        print(f"[ERROR] Failed to create venv: {e}")
+        print(f"[ERROR] Exception: {e}")
         return False
 
 def install_dependencies():
