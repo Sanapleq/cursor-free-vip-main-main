@@ -37,10 +37,10 @@ def check_python():
                               capture_output=True, text=True, timeout=5)
         if result.returncode == 0:
             version = result.stdout.strip()
-            print(f"✓ Python found: {version}")
+            print(f"[OK] Python found: {version}")
             return True
     except Exception as e:
-        print(f"✗ Python check failed: {e}")
+        print(f"[ERROR] Python check failed: {e}")
     
     return False
 
@@ -49,15 +49,17 @@ def create_venv():
     print("Creating virtual environment...")
     try:
         result = subprocess.run([sys.executable, '-m', 'venv', 'myenv'], 
-                              capture_output=True, text=True, timeout=120)
+                              capture_output=True, text=True, timeout=120,
+                              encoding='utf-8', errors='replace')
         if result.returncode == 0:
-            print("✓ Virtual environment created")
+            print("[OK] Virtual environment created")
             return True
         else:
-            print(f"✗ Failed: {result.stderr[:200] if result.stderr else 'Unknown error'}")
+            err_msg = result.stderr[:200] if result.stderr else 'Unknown error'
+            print(f"[ERROR] Failed: {err_msg}")
             return False
     except Exception as e:
-        print(f"✗ Failed to create venv: {e}")
+        print(f"[ERROR] Failed to create venv: {e}")
         return False
 
 def install_dependencies():
@@ -67,35 +69,38 @@ def install_dependencies():
     venv_python = SCRIPT_DIR / 'myenv' / 'Scripts' / 'python.exe'
     
     if not venv_python.exists():
-        print("✗ Virtual environment Python not found!")
+        print("[ERROR] Virtual environment Python not found!")
         return False
     
     try:
         # Upgrade pip first
         print("Upgrading pip...")
         subprocess.run([str(venv_python), '-m', 'pip', 'install', '--upgrade', 'pip'], 
-                      check=True, capture_output=True, timeout=300)
+                      check=True, capture_output=True, timeout=300,
+                      encoding='utf-8', errors='replace')
         
         # Install requirements
         req_file = SCRIPT_DIR / 'requirements.txt'
         if req_file.exists():
             print("Installing packages from requirements.txt...")
             result = subprocess.run([str(venv_python), '-m', 'pip', 'install', '-r', str(req_file)], 
-                                  capture_output=True, text=True, timeout=600)
+                                  capture_output=True, text=True, timeout=600,
+                                  encoding='utf-8', errors='replace')
             if result.returncode == 0:
-                print("✓ All dependencies installed")
+                print("[OK] All dependencies installed")
                 return True
             else:
-                print(f"✗ Installation failed: {result.stderr[:200] if result.stderr else 'Unknown error'}")
+                err_msg = result.stderr[:200] if result.stderr else 'Unknown error'
+                print(f"[ERROR] Installation failed: {err_msg}")
                 return False
         else:
-            print("✗ requirements.txt not found!")
+            print("[ERROR] requirements.txt not found!")
             return False
     except subprocess.TimeoutExpired:
-        print("✗ Installation timed out!")
+        print("[ERROR] Installation timed out!")
         return False
     except Exception as e:
-        print(f"✗ Installation failed: {e}")
+        print(f"[ERROR] Installation failed: {e}")
         return False
 
 def check_dependencies():
@@ -121,16 +126,16 @@ def launch_application():
     main_py = SCRIPT_DIR / 'main.py'
     
     if not main_py.exists():
-        print("✗ main.py not found!")
+        print("[ERROR] main.py not found!")
         return False
     
     try:
         # Don't wait for completion, just launch
         subprocess.Popen([str(venv_python), str(main_py)])
-        print("✓ Application launched")
+        print("[OK] Application launched")
         return True
     except Exception as e:
-        print(f"✗ Failed to launch: {e}")
+        print(f"[ERROR] Failed to launch: {e}")
         return False
 
 def main():
