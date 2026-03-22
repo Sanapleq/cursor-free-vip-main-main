@@ -1,19 +1,39 @@
 @echo off
-title Cursor Free VIP Setup
+title Cursor Free VIP - Setup
 color 0A
 cls
 
-REM Get script directory (works from any location)
+REM Get script directory
 set SCRIPT_DIR=%~dp0
 cd /d "%SCRIPT_DIR%"
 
+REM Show welcome screen
 echo.
 echo ================================================================
 echo    Cursor Free VIP - Installation
 echo ================================================================
 echo.
+echo    Welcome! This will install all required dependencies.
+echo.
+echo    What will happen:
+echo      1. Check Python installation
+echo      2. Create virtual environment (myenv/)
+echo      3. Install 29 Python packages
+echo      4. Create drivers folder
+echo      5. Create desktop shortcut
+echo.
+echo    Estimated time: 3-7 minutes
+echo.
+echo    Directory: %CD%
+echo.
+echo ================================================================
+echo.
 
-REM Check Python
+REM Pause to let user read
+echo    Press any key to continue...
+pause >nul
+
+echo.
 echo [1/5] Checking Python...
 python --version >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
@@ -21,26 +41,28 @@ if %ERRORLEVEL% NEQ 0 (
     echo.
     echo    ERROR: Python not found!
     echo.
-    echo    Install Python 3.11-3.14 from:
+    echo    Please install Python 3.11-3.14 from:
     echo    https://www.python.org/downloads/
     echo.
     echo    IMPORTANT: Check "Add Python to PATH" during installation
+    echo.
+    echo    After installing Python, run SETUP.bat again.
     echo.
     pause
     exit /b 1
 )
 
-echo    OK: Python found
+for /f "tokens=2" %%i in ('python --version 2^>^&1') do set PY_VER=%%i
+echo    OK: Python %PY_VER% found
 echo.
 
-REM Create virtual environment
 echo [2/5] Creating virtual environment...
-echo    Directory: %SCRIPT_DIR%myenv
+echo    Location: %CD%\myenv
 echo.
 
 if exist "myenv\Scripts\python.exe" (
     echo    INFO: Virtual environment already exists
-    echo    OK: Skipped
+    echo    SKIPPED: Using existing myenv/
 ) else (
     echo    Creating myenv...
     python -m venv myenv
@@ -48,50 +70,74 @@ if exist "myenv\Scripts\python.exe" (
         echo    OK: Virtual environment created
     ) else (
         color 0C
-        echo    ERROR: Failed to create!
+        echo.
+        echo    ERROR: Failed to create virtual environment!
         echo.
         echo    Current directory: %CD%
+        echo    Python location: where python
+        where python 2>nul
+        echo.
         pause
         exit /b 1
     )
 )
 echo.
 
-REM Activate and install dependencies
 echo [3/5] Installing dependencies...
+echo    This may take 2-7 minutes depending on your internet speed.
 echo.
 
 call myenv\Scripts\activate
 
-if exist "requirements.txt" (
-    echo    Installing packages (this may take 2-5 minutes)...
+if %ERRORLEVEL% NEQ 0 (
+    color 0C
     echo.
-    pip install -r requirements.txt --quiet
+    echo    ERROR: Failed to activate virtual environment!
+    echo.
+    pause
+    exit /b 1
+)
+
+if exist "requirements.txt" (
+    echo    Installing packages from requirements.txt...
+    echo.
+    echo    Downloading and installing (please wait)...
+    echo.
+    
+    REM Install with progress
+    pip install --upgrade pip --quiet
+    pip install -r requirements.txt
+    
     if %ERRORLEVEL% EQU 0 (
-        echo    OK: Dependencies installed
+        echo.
+        echo    OK: All dependencies installed successfully!
     ) else (
         color 0C
+        echo.
         echo    ERROR: Installation failed!
         echo.
-        echo    Try manually:
-        echo    cd /d "%SCRIPT_DIR%"
-        echo    call myenv\Scripts\activate
-        echo    pip install -r requirements.txt
+        echo    Try manual installation:
+        echo    1. Open PowerShell in this folder
+        echo    2. Run: .\myenv\Scripts\activate
+        echo    3. Run: pip install -r requirements.txt
         echo.
         pause
         exit /b 1
     )
 ) else (
     color 0C
+    echo.
     echo    ERROR: requirements.txt not found!
     echo    Current directory: %CD%
+    echo    Files: 
+    dir /b *.txt
+    echo.
     pause
     exit /b 1
 )
 echo.
 
-REM Create drivers folder
-echo [4/5] Setting up drivers...
+echo [4/5] Setting up drivers folder...
 echo.
 
 if not exist "drivers" (
@@ -104,20 +150,18 @@ if not exist "drivers" (
 if exist "drivers\chromedriver.exe" (
     echo    OK: ChromeDriver found
 ) else (
-    echo    INFO: ChromeDriver will be downloaded on first run
+    echo    INFO: ChromeDriver will be downloaded automatically on first run
 )
 echo.
 
-REM Final
-echo [5/5] Completing...
+echo [5/5] Creating desktop shortcut...
 echo.
 
-echo    Creating desktop shortcut...
-powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Cursors Free VIP.lnk'); $Shortcut.TargetPath = '%SCRIPT_DIR%START.bat'; $Shortcut.WorkingDirectory = '%SCRIPT_DIR%'; $Shortcut.Description = 'Cursor Free VIP'; $Shortcut.Save()" 2>nul
+powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Cursors Free VIP.lnk'); $Shortcut.TargetPath = '%SCRIPT_DIR%START.bat'; $Shortcut.WorkingDirectory = '%SCRIPT_DIR%'; $Shortcut.Description = 'Cursor Free VIP - Auto Registration'; $Shortcut.Save()" 2>nul
 if %ERRORLEVEL% EQU 0 (
-    echo    OK: Shortcut created
+    echo    OK: Desktop shortcut created
 ) else (
-    echo    INFO: Shortcut not created (not critical)
+    echo    INFO: Shortcut creation skipped (not critical)
 )
 echo.
 
@@ -126,29 +170,43 @@ echo ================================================================
 echo    INSTALLATION COMPLETE!
 echo ================================================================
 echo.
-echo    Installation directory: %SCRIPT_DIR%
-echo    OK: All dependencies installed
-echo    OK: Virtual environment ready
-echo    OK: Desktop shortcut created
+echo    Status:
+echo      [OK] Virtual environment created
+echo      [OK] Dependencies installed
+echo      [OK] Drivers folder ready
+echo      [OK] Desktop shortcut created
 echo.
-echo    To run the program:
-echo       Double-click: START.bat
+echo    Installation directory: %CD%
 echo.
-echo    NOTE: Program requires Administrator privileges!
+echo ================================================================
+echo.
+echo    NEXT STEP:
+echo    ----------------------------------------
+echo    You can now run the program by double-clicking:
+echo.
+echo       START.bat
+echo.
+echo    Or use the desktop shortcut:
+echo       "Cursors Free VIP"
+echo.
+echo    NOTE: The program requires Administrator privileges!
 echo.
 echo ================================================================
 echo.
 
-set /p RUN_NOW="Run program now? (y/n): "
-if /i "%RUN_NOW%"=="y" (
+set /p RUN_NOW="Do you want to run the program now? (Y/N): "
+if /i "%RUN_NOW%"=="Y" (
     echo.
-    echo    Starting...
-    timeout /t 2 >nul
+    echo    Starting in 3 seconds...
+    timeout /t 3 >nul
     START.bat
 ) else (
     echo.
-    echo    Ready! Run START.bat when you are ready.
+    echo    You can run START.bat anytime when ready!
 )
 
+echo.
+echo    Installation log saved to: %CD%\setup_log.txt
+echo    Setup completed at %DATE% %TIME% > "%SCRIPT_DIR%setup_log.txt"
 echo.
 timeout /t 5 >nul
