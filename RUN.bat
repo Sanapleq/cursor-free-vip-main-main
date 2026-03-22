@@ -1,12 +1,31 @@
 @echo off
 title Cursor Free VIP
 color 0B
-cls
 
 REM Get script directory
 set SCRIPT_DIR=%~dp0
 cd /d "%SCRIPT_DIR%"
 
+REM Check if running as administrator
+net session >nul 2>&1
+if %ERRORLEVEL% EQU 0 (
+    goto :ADMIN
+)
+
+REM Not running as administrator - restart with admin rights
+echo.
+echo ================================================================
+echo    Cursor Free VIP - Запуск от имени администратора
+echo ================================================================
+echo.
+echo    Запуск с правами администратора...
+echo.
+
+powershell -Command "Start-Process '%~f0' -Verb RunAs"
+exit /b
+
+:ADMIN
+cls
 echo.
 echo ================================================================
 echo    Cursor Free VIP - Запуск
