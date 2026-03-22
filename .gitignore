@@ -4,23 +4,25 @@ __pycache__/
 *$py.class
 *.so
 .Python
-env/
-venv/
-ENV/
-myenv/
-myenv\
 *.egg-info/
-dist/
-build/
-*.egg
+.eggs/
 
-# Virtual environments that should be excluded
+# Virtual environments
+myenv/
 ENV/
-test.py
-Run_Venv.bat
-run_venv.mac.command
+venv/
+.venv/
 
-# Development
+# pip cache
+.pip_cache/
+
+# Build artifacts
+build/
+dist/
+*.spec
+*.spec2
+
+# IDE
 .idea/
 .vscode/
 *.swp
@@ -30,63 +32,43 @@ run_venv.mac.command
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
-# Logs and databases
+# Logs
 *.log
+
+# Database
 *.db
 *.sqlite
 *.sqlite3
 
-# Project specific - DO NOT commit these
+# Temp files
+*.tmp
+*.bak
+*.temp
+
+# Project specific - DO NOT commit
 .env
 .env copy
 credentials.txt
 cursor_accounts.txt
 temp_account_info.txt
+setup_log.txt
+start_log.txt
 
-# Build artifacts
-build/
-dist/
-*.spec2
-*.spec
+# Drivers (downloaded separately)
+drivers/*.exe
+drivers/*.dll
+drivers/*.sys
 
 # Test files
-test.py
 test_*.py
 *_test.py
 
-# Temporary files
-*.tmp
-*.bak
-*.temp
-
-# Local scripts that shouldn't be committed
+# Local scripts
 check_license.py
 cursor_modifier.py
 reset_machine.py
 token_monitor.py
 get_mac.py
 recaptcha.py
-install_requirements.bat
-install.bat
-run.bat
-new_tempemail_smail.py
-new_tempemail_api.py
-
-# Server directory
-server/
-
-# Local drivers (downloaded separately)
-drivers/*.exe
-drivers/*.dll
-drivers/*.sys
-
-# Test and debug files
-test_file_access.py
-test_output.txt
-test_permissions.py
-
-# Documentation files for fixes (optional)
-FIX_PERMISSIONS.md
-FIXES.md
-INSTALL.md
