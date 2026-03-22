@@ -63,23 +63,80 @@ echo.
 if exist "myenv\Scripts\python.exe" (
     echo    INFO: Virtual environment already exists
     echo    SKIPPED: Using existing myenv/
-) else (
-    echo    Creating myenv...
-    python -m venv myenv
+    echo.
+    echo    Testing if myenv works...
+    call myenv\Scripts\activate
     if %ERRORLEVEL% EQU 0 (
+        echo    OK: myenv works correctly
+    ) else (
+        echo    WARNING: myenv exists but activation failed
+        echo    Will try to recreate...
+        rmdir /s /q myenv 2>nul
+        if %ERRORLEVEL% NEQ 0 (
+            echo    ERROR: Cannot remove old myenv folder
+            echo    Please manually delete the myenv folder and run SETUP.bat again
+            echo.
+            pause
+            exit /b 1
+        )
+        echo    Old myenv removed, will create new one
+    )
+    echo.
+)
+
+REM Create virtual environment
+if not exist "myenv\Scripts\python.exe" (
+    echo    Creating new myenv...
+    echo    Command: python -m venv myenv
+    echo.
+    
+    python -m venv myenv
+    set VENV_RESULT=%ERRORLEVEL%
+    
+    if %VENV_RESULT% EQU 0 (
         echo    OK: Virtual environment created
     ) else (
         color 0C
         echo.
         echo    ERROR: Failed to create virtual environment!
+        echo    Error code: %VENV_RESULT%
+        echo.
+        echo    Troubleshooting:
+        echo    1. Check if you have enough disk space (at least 500MB)
+        echo    2. Check if antivirus is blocking venv creation
+        echo    3. Try running as Administrator
+        echo    4. Try manual creation:
+        echo       python -m venv myenv
         echo.
         echo    Current directory: %CD%
-        echo    Python location: where python
+        echo    Python location:
         where python 2>nul
         echo.
-        pause
-        exit /b 1
+        
+        REM Try alternative method
+        echo    Trying alternative method...
+        python -m venv --clear myenv 2>nul
+        if %ERRORLEVEL% EQU 0 (
+            echo    OK: Created with --clear flag
+        ) else (
+            echo    ERROR: Alternative method also failed
+            pause
+            exit /b 1
+        )
     )
+)
+
+echo    Verifying myenv...
+if exist "myenv\Scripts\python.exe" (
+    echo    OK: myenv\Scripts\python.exe found
+) else (
+    color 0C
+    echo    ERROR: myenv\Scripts\python.exe not found!
+    echo    Checking what's in myenv folder:
+    dir myenv 2>nul
+    echo.
+    pause
+    exit /b 1
 )
 echo.
 
@@ -93,9 +150,20 @@ if %ERRORLEVEL% NEQ 0 (
     color 0C
     echo.
     echo    ERROR: Failed to activate virtual environment!
+    echo    Error code: %ERRORLEVEL%
     echo.
-    pause
-    exit /b 1
+    echo    Trying direct Python path...
+    "%CD%\myenv\Scripts\python.exe" -m pip --version >nul 2>&1
+    if %ERRORLEVEL% EQU 0 (
+        echo    OK: Direct Python access works
+        set PYTHON_CMD="%CD%\myenv\Scripts\python.exe"
+    ) else (
+        echo    ERROR: Cannot access myenv Python directly
+        pause
+        exit /b 1
+    )
+) else (
+    set PYTHON_CMD=python
 )
 
 if exist "requirements.txt" (
@@ -104,9 +172,13 @@ if exist "requirements.txt" (
     echo    Downloading and installing (please wait)...
     echo.
     
-    REM Install with progress
-    pip install --upgrade pip --quiet
-    pip install -r requirements.txt
+    REM Upgrade pip first
+    echo    Upgrading pip...
+    %PYTHON_CMD% -m pip install --upgrade pip --quiet
+    
+    REM Install requirements
+    echo    Installing requirements...
+    %PYTHON_CMD% -m pip install -r requirements.txt
     
     if %ERRORLEVEL% EQU 0 (
         echo.
