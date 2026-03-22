@@ -52,52 +52,51 @@ def create_venv():
     """Create virtual environment"""
     print("Creating virtual environment (this may take 1-2 minutes)...")
     
-    venv_path = SCRIPT_DIR / 'myenv'
-    
-    # Try direct venv creation first
-    try:
-        import venv
-        print("Using Python venv module...")
-        
-        # Create with pip
-        builder = venv.EnvBuilder(with_pip=True, clear=False)
-        builder.create(str(venv_path))
-        
-        # Verify
-        if (venv_path / 'Scripts' / 'python.exe').exists():
-            print("[OK] Virtual environment created")
-            return True
-        else:
-            print("[WARNING] venv module succeeded but python.exe not found")
-            # Fall through to subprocess method
-    except Exception as e:
-        print(f"[INFO] venv module failed: {e}")
-        print("Trying subprocess method...")
-    
-    # Fallback: Use subprocess
-    try:
-        result = subprocess.run(
-            [sys.executable, '-m', 'venv', 'myenv'],
-            capture_output=True,
-            text=True,
-            timeout=300,  # 5 minutes
-            encoding='utf-8',
-            errors='replace'
-        )
-        
-        if result.returncode == 0:
-            print("[OK] Virtual environment created (subprocess)")
-            return True
-        else:
-            err_msg = result.stderr[:300] if result.stderr else 'Unknown error'
-            print(f"[ERROR] Failed: {err_msg}")
+    # Always use subprocess for frozen EXE to avoid _MEI temp folder issues
+    if getattr(sys, 'frozen', False):
+        print("Running as EXE - using subprocess method...")
+        try:
+            result = subprocess.run(
+                [sys.executable, '-m', 'venv', 'myenv'],
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 minutes
+                encoding='utf-8',
+                errors='replace'
+            )
+            
+            if result.returncode == 0:
+                print("[OK] Virtual environment created")
+                return True
+            else:
+                err_msg = result.stderr[:300] if result.stderr else 'Unknown error'
+                print(f"[ERROR] Failed: {err_msg}")
+                return False
+        except subprocess.TimeoutExpired:
+            print("[ERROR] Timeout - took more than 5 minutes")
             return False
-    except subprocess.TimeoutExpired:
-        print("[ERROR] Timeout - took more than 5 minutes")
-        return False
-    except Exception as e:
-        print(f"[ERROR] Exception: {e}")
-        return False
+        except Exception as e:
+            print(f"[ERROR] Exception: {e}")
+            return False
+    else:
+        # For unfrozen (development), use direct venv module
+        print("Running in development mode - using venv module...")
+        try:
+            import venv
+            venv_path = SCRIPT_DIR / 'myenv'
+            
+            builder = venv.EnvBuilder(with_pip=True, clear=False)
+            builder.create(str(venv_path))
+            
+            if (venv_path / 'Scripts' / 'python.exe').exists():
+                print("[OK] Virtual environment created")
+                return True
+            else:
+                print("[ERROR] python.exe not found after venv creation")
+                return False
+        except Exception as e:
+            print(f"[ERROR] venv module failed: {e}")
+            return False
 
 def install_dependencies():
     """Install all dependencies"""
