@@ -3,6 +3,10 @@ title Cursor Free VIP
 color 0B
 cls
 
+REM Get script directory
+set SCRIPT_DIR=%~dp0
+cd /d "%SCRIPT_DIR%"
+
 echo.
 echo ================================================================
 echo    Cursor Free VIP - Запуск
@@ -24,7 +28,7 @@ if %ERRORLEVEL% NEQ 0 (
     pause
     exit /b 1
 )
-echo    OK
+echo    OK: Python found
 echo.
 
 REM Create venv if needed
@@ -46,7 +50,7 @@ if %ERRORLEVEL% EQU 0 (
     echo    OK: Dependencies installed
 ) else (
     echo    Installing dependencies...
-    pip install -r requirements.txt --quiet --no-warn-script-location
+    pip install -r "%SCRIPT_DIR%requirements.txt" --quiet --no-warn-script-location
     echo    OK: Installed
 )
 echo.
@@ -63,6 +67,6 @@ echo    Starting...
 echo ================================================================
 echo.
 
-python main.py
+python "%SCRIPT_DIR%main.py"
 
 pause
