@@ -1,130 +1,148 @@
 @echo off
-chcp 65001 >nul
+chcp 65001 >nul 2>&1
 title Cursor Free VIP - Установка
 
+color 0A
+cls
+
+echo.
 echo ================================================================
-echo    🚀 Установка Cursor Free VIP
+echo    🚀 Cursor Free VIP - Установка и настройка
 echo ================================================================
 echo.
 
 :: Проверка Python
+echo [1/5] Проверка Python...
 python --version >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo ❌ Python не найден!
+    color 0C
     echo.
-    echo    Установите Python 3.11-3.14 с https://www.python.org/
+    echo    ❌ Python не найден!
+    echo.
+    echo    Установите Python 3.11-3.14:
+    echo    https://www.python.org/downloads/
+    echo.
+    echo    ⚠️  При установке отметьте: "Add Python to PATH"
     echo.
     pause
     exit /b 1
 )
 
-echo ✅ Python найден
-python --version
+for /f "tokens=2" %%i in ('python --version 2^>^&1') do set PYTHON_VERSION=%%i
+echo    ✅ Python %PYTHON_VERSION% найден
 echo.
 
 :: Создание виртуального окружения
-echo ================================================================
-echo    Шаг 1: Создание виртуального окружения
-echo ================================================================
+echo [2/5] Создание виртуального окружения...
 echo.
 
 if exist "myenv\Scripts\python.exe" (
-    echo ℹ️  Виртуальное окружение уже существует
-    set /p RECREATE="Пересоздать? (y/n): "
-    if /i "%RECREATE%"=="y" (
-        rmdir /s /q myenv
-        python -m venv myenv
-        echo ✅ Виртуальное окружение пересоздано
-    ) else (
-        echo ⏭️  Пропущено
-    )
+    echo    ℹ️  Виртуальное окружение уже существует
+    echo    ✅ Пропущено
 ) else (
+    echo    Создание myenv...
     python -m venv myenv
-    echo ✅ Виртуальное окружение создано
+    if %ERRORLEVEL% EQU 0 (
+        echo    ✅ Виртуальное окружение создано
+    ) else (
+        color 0C
+        echo    ❌ Ошибка создания!
+        pause
+        exit /b 1
+    )
 )
 echo.
 
 :: Активация и установка зависимостей
-echo ================================================================
-echo    Шаг 2: Установка зависимостей
-echo ================================================================
+echo [3/5] Установка зависимостей...
 echo.
 
 call myenv\Scripts\activate
 
 if exist "requirements.txt" (
-    pip install -r requirements.txt
+    echo    Установка пакетов (это может занять 2-5 минут)...
+    echo.
+    pip install -r requirements.txt --quiet
     if %ERRORLEVEL% EQU 0 (
-        echo ✅ Зависимости установлены
+        echo    ✅ Зависимости установлены
     ) else (
-        echo ❌ Ошибка установки зависимостей!
+        color 0C
+        echo    ❌ Ошибка установки!
+        echo.
+        echo    Попробуйте вручную:
+        echo    call myenv\Scripts\activate
+        echo    pip install -r requirements.txt
+        echo.
         pause
         exit /b 1
     )
 ) else (
-    echo ❌ requirements.txt не найден!
+    color 0C
+    echo    ❌ requirements.txt не найден!
     pause
     exit /b 1
 )
 echo.
 
 :: Создание папки drivers
-echo ================================================================
-echo    Шаг 3: Настройка драйверов
-echo ================================================================
+echo [4/5] Настройка драйверов...
 echo.
 
 if not exist "drivers" (
     mkdir drivers
-    echo ✅ Папка drivers создана
+    echo    ✅ Папка drivers создана
 ) else (
-    echo ℹ️  Папка drivers уже существует
+    echo    ℹ️  Папка drivers уже существует
 )
 
-:: Проверка chromedriver
 if exist "drivers\chromedriver.exe" (
-    echo ℹ️  ChromeDriver уже существует
+    echo    ✅ ChromeDriver найден
 ) else (
-    echo ⚠️  ChromeDriver не найден
-    echo    Он будет автоматически загружен при первом запуске
-    echo    ИЛИ скачайте с: https://chromedriver.chromium.org/
-)
-echo.
-
-:: Создание ярлыка на рабочем столе (опционально)
-echo ================================================================
-echo    Шаг 4: Создание ярлыка (опционально)
-echo ================================================================
-echo.
-set /p CREATE_SHORTCUT="Создать ярлык на рабочем столе? (y/n): "
-if /i "%CREATE_SHORTCUT%"=="y" (
-    powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Cursors Free VIP.lnk'); $Shortcut.TargetPath = '%CD%\START.bat'; $Shortcut.WorkingDirectory = '%CD%'; $Shortcut.IconLocation = '%CD%\images\logo.png'; $Shortcut.Description = 'Cursor Free VIP - Автоматическая регистрация'; $Shortcut.Save()"
-    echo ✅ Ярлык создан на рабочем столе
+    echo    ⚠️  ChromeDriver будет загружен автоматически при первом запуске
 )
 echo.
 
 :: Финал
+echo [5/5] Завершение...
+echo.
+
+:: Создание ярлыка
+echo    Создание ярлыка на рабочем столе...
+powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Cursors Free VIP.lnk'); $Shortcut.TargetPath = '%CD%\START.bat'; $Shortcut.WorkingDirectory = '%CD%'; $Shortcut.IconLocation = '%SystemRoot%\System32\cmd.exe'; $Shortcut.Description = 'Cursor Free VIP'; $Shortcut.Save()" 2>nul
+if %ERRORLEVEL% EQU 0 (
+    echo    ✅ Ярлык создан
+) else (
+    echo    ℹ️  Ярлык не создан (не критично)
+)
+echo.
+
+color 02
 echo ================================================================
 echo    🎉 УСТАНОВКА ЗАВЕРШЕНА!
 echo ================================================================
 echo.
-echo    Теперь вы можете запустить программу:
+echo    ✅ Все зависимости установлены
+echo    ✅ Виртуальное окружение готово
+echo    ✅ Ярлык создан на рабочем столе
 echo.
-echo    1. Дважды кликните на: START.bat
-echo    2. ИЛИ через ярлык на рабочем столе
+echo    📁 Для запуска программы:
+echo       Дважды кликните на: START.bat
 echo.
 echo    ⚠️  Программа требует прав администратора!
 echo.
+echo ================================================================
+echo.
 
-set /p RUN_NOW="Запустить сейчас? (y/n): "
+set /p RUN_NOW="🚀 Запустить программу сейчас? (y/n): "
 if /i "%RUN_NOW%"=="y" (
     echo.
-    echo Запуск...
+    echo    Запуск...
+    timeout /t 2 >nul
     START.bat
 ) else (
     echo.
-    echo ✅ Готово! Запустите START.bat когда будете готовы.
+    echo    Готово! Запустите START.bat когда будете готовы.
 )
 
 echo.
-pause
+timeout /t 5 >nul
