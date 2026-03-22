@@ -7,81 +7,111 @@ REM Get script directory
 set SCRIPT_DIR=%~dp0
 cd /d "%SCRIPT_DIR%"
 
-REM Create log file
-set LOG_FILE=%SCRIPT_DIR%start_log.txt
-echo START.bat Log - %DATE% %TIME% > "%LOG_FILE%"
-echo Script: %~f0 >> "%LOG_FILE%"
-echo Directory: %CD% >> "%LOG_FILE%"
-echo. >> "%LOG_FILE%"
-
 echo.
 echo ================================================================
 echo    Cursor Free VIP - Launcher
 echo ================================================================
 echo.
 echo    Working directory: %CD%
-echo    Log file: %LOG_FILE%
 echo.
 
-echo [1/3] Checking virtual environment... | tee -a "%LOG_FILE%"
+REM Check virtual environment
+echo [1/4] Checking virtual environment...
 
 if exist "myenv\Scripts\python.exe" (
-    echo    OK: Virtual environment found | tee -a "%LOG_FILE%"
+    echo    OK: Virtual environment found
 ) else (
     color 0C
-    echo    ERROR: Virtual environment not found! | tee -a "%LOG_FILE%"
     echo.
-    echo    Please run SETUP.bat first
+    echo    ERROR: Virtual environment not found!
+    echo.
+    echo    You need to run SETUP.bat first!
+    echo.
+    echo    What happened:
+    echo    - You downloaded this project from GitHub
+    echo    - Virtual environment (myenv/) was not included in download
+    echo    - You need to install dependencies first
+    echo.
+    echo    Solution:
+    echo    1. Run: SETUP.bat
+    echo    2. Wait 3-7 minutes for installation
+    echo    3. Then run: START.bat
+    echo.
+    echo    Or download and run: README_FIRST.bat
     echo.
     pause
     exit /b 1
 )
 echo.
 
-echo [2/3] Checking administrator rights... | tee -a "%LOG_FILE%"
+REM Check if dependencies are installed
+echo [2/4] Checking dependencies...
+
+call myenv\Scripts\activate
+python -c "import requests" >nul 2>&1
+if %ERRORLEVEL% NEQ 0 (
+    color 0C
+    echo.
+    echo    ERROR: Dependencies not installed!
+    echo.
+    echo    The virtual environment exists but packages are missing.
+    echo.
+    echo    Solution:
+    echo    1. Run: SETUP.bat
+    echo    2. Wait for installation to complete
+    echo    3. Then run: START.bat
+    echo.
+    pause
+    exit /b 1
+)
+echo    OK: Dependencies found
+echo.
+
+REM Check admin rights
+echo [3/4] Checking administrator rights...
 
 net session >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo    WARNING: Administrator rights required! | tee -a "%LOG_FILE%"
-    echo    Restarting as administrator... | tee -a "%LOG_FILE%"
-    echo. | tee -a "%LOG_FILE%"
+    echo    WARNING: Administrator rights required!
+    echo.
+    echo    Restarting as administrator...
+    echo.
     timeout /t 2 >nul
     
-    REM Restart as admin with full path
-    echo    Running: powershell -Command "Start-Process '%SCRIPT_DIR%START.bat' -Verb RunAs" | tee -a "%LOG_FILE%"
-    powershell -Command "Start-Process '%SCRIPT_DIR%START.bat' -Verb RunAs"
-    
-    echo    Restarted. This window will close in 3 seconds... | tee -a "%LOG_FILE%"
-    timeout /t 3 >nul
+    REM Restart as admin
+    powershell -Command "Start-Process '%~f0' -Verb RunAs"
+    echo    Restarted. This window will close.
+    timeout /t 2 >nul
     exit /b
 )
 
-echo    OK: Administrator rights obtained | tee -a "%LOG_FILE%"
+echo    OK: Administrator rights obtained
 echo.
 
-echo [3/3] Starting program... | tee -a "%LOG_FILE%"
+REM Activate and run
+echo [4/4] Starting program...
 echo.
 
 call myenv\Scripts\activate
-set ACTIVATE_RESULT=%ERRORLEVEL%
-echo    Activation result: %ACTIVATE_RESULT% | tee -a "%LOG_FILE%"
 
-if %ACTIVATE_RESULT% NEQ 0 (
+if %ERRORLEVEL% NEQ 0 (
     color 0C
-    echo    ERROR: Failed to activate virtual environment! | tee -a "%LOG_FILE%"
+    echo    ERROR: Failed to activate virtual environment!
     echo.
     pause
     exit /b 1
 )
 
-echo    OK: Virtual environment activated | tee -a "%LOG_FILE%"
-echo    OK: Starting main.py... | tee -a "%LOG_FILE%"
+echo    OK: Virtual environment activated
+echo    OK: Starting main.py...
 echo.
 echo ================================================================
 echo.
 
+REM Run program
 python main.py
 
+REM If program completed
 echo.
 echo ================================================================
 echo    Program completed
