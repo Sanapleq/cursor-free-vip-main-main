@@ -1,27 +1,25 @@
 @echo off
-chcp 65001 >nul 2>&1
-title Cursor Free VIP - Запуск
-
+title Cursor Free VIP
 color 0B
 cls
 
 echo.
 echo ================================================================
-echo    🚀 Cursor Free VIP - Запуск
+echo    Cursor Free VIP - Launcher
 echo ================================================================
 echo.
 
-:: Проверка виртуального окружения
-echo [1/3] Проверка виртуального окружения...
+REM Check virtual environment
+echo [1/3] Checking virtual environment...
 
 if not exist "myenv\Scripts\python.exe" (
     color 0C
     echo.
-    echo    ❌ Виртуальное окружение не найдено!
+    echo    ERROR: Virtual environment not found!
     echo.
-    echo    Сначала запустите: SETUP.bat
+    echo    Please run SETUP.bat first
     echo.
-    echo    Или установите вручную:
+    echo    Or install manually:
     echo    1. python -m venv myenv
     echo    2. call myenv\Scripts\activate
     echo    3. pip install -r requirements.txt
@@ -30,55 +28,55 @@ if not exist "myenv\Scripts\python.exe" (
     exit /b 1
 )
 
-echo    ✅ Виртуальное окружение найдено
+echo    OK: Virtual environment found
 echo.
 
-:: Проверка прав администратора
-echo [2/3] Проверка прав администратора...
+REM Check admin rights
+echo [2/3] Checking administrator rights...
 
 net session >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo    ⚠️  Требуются права администратора!
+    echo    WARNING: Administrator rights required!
     echo.
-    echo    Перезапуск от имени администратора...
+    echo    Restarting as administrator...
     echo.
     timeout /t 2 >nul
     
-    :: Перезапуск от администратора
+    REM Restart as admin
     powershell -Command "Start-Process '%~f0' -Verb RunAs"
     exit /b
 )
 
-echo    ✅ Права администратора получены
+echo    OK: Administrator rights obtained
 echo.
 
-:: Активация и запуск
-echo [3/3] Запуск программы...
+REM Activate and run
+echo [3/3] Starting program...
 echo.
 
 call myenv\Scripts\activate
 
 if %ERRORLEVEL% NEQ 0 (
     color 0C
-    echo    ❌ Ошибка активации виртуального окружения!
+    echo    ERROR: Failed to activate virtual environment!
     echo.
     pause
     exit /b 1
 )
 
-echo    ✅ Виртуальное окружение активировано
-echo    ✅ Запуск main.py...
+echo    OK: Virtual environment activated
+echo    OK: Starting main.py...
 echo.
 echo ================================================================
 echo.
 
-:: Запуск программы
+REM Run program
 python main.py
 
-:: Если программа завершилась
+REM If program completed
 echo.
 echo ================================================================
-echo    Программа завершила работу
+echo    Program completed
 echo ================================================================
 echo.
 pause
