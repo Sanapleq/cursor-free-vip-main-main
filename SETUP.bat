@@ -3,6 +3,10 @@ title Cursor Free VIP Setup
 color 0A
 cls
 
+REM Get script directory (works from any location)
+set SCRIPT_DIR=%~dp0
+cd /d "%SCRIPT_DIR%"
+
 echo.
 echo ================================================================
 echo    Cursor Free VIP - Installation
@@ -31,6 +35,7 @@ echo.
 
 REM Create virtual environment
 echo [2/5] Creating virtual environment...
+echo    Directory: %SCRIPT_DIR%myenv
 echo.
 
 if exist "myenv\Scripts\python.exe" (
@@ -44,6 +49,8 @@ if exist "myenv\Scripts\python.exe" (
     ) else (
         color 0C
         echo    ERROR: Failed to create!
+        echo.
+        echo    Current directory: %CD%
         pause
         exit /b 1
     )
@@ -67,6 +74,7 @@ if exist "requirements.txt" (
         echo    ERROR: Installation failed!
         echo.
         echo    Try manually:
+        echo    cd /d "%SCRIPT_DIR%"
         echo    call myenv\Scripts\activate
         echo    pip install -r requirements.txt
         echo.
@@ -76,6 +84,7 @@ if exist "requirements.txt" (
 ) else (
     color 0C
     echo    ERROR: requirements.txt not found!
+    echo    Current directory: %CD%
     pause
     exit /b 1
 )
@@ -104,7 +113,7 @@ echo [5/5] Completing...
 echo.
 
 echo    Creating desktop shortcut...
-powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Cursors Free VIP.lnk'); $Shortcut.TargetPath = '%CD%\START.bat'; $Shortcut.WorkingDirectory = '%CD%'; $Shortcut.Description = 'Cursor Free VIP'; $Shortcut.Save()" 2>nul
+powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Cursors Free VIP.lnk'); $Shortcut.TargetPath = '%SCRIPT_DIR%START.bat'; $Shortcut.WorkingDirectory = '%SCRIPT_DIR%'; $Shortcut.Description = 'Cursor Free VIP'; $Shortcut.Save()" 2>nul
 if %ERRORLEVEL% EQU 0 (
     echo    OK: Shortcut created
 ) else (
@@ -117,6 +126,7 @@ echo ================================================================
 echo    INSTALLATION COMPLETE!
 echo ================================================================
 echo.
+echo    Installation directory: %SCRIPT_DIR%
 echo    OK: All dependencies installed
 echo    OK: Virtual environment ready
 echo    OK: Desktop shortcut created
